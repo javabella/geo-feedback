@@ -1,0 +1,19 @@
+{
+  "name": "geo-feedback",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/javabella/geo-feedback.git"
+  },
+  "author": "lena_pavlova <isuzu69@gmail.com>",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/javabella/geo-feedback/issues"
+  },
+  "homepage": "https://github.com/javabella/geo-feedback#readme"
+}
