@@ -9,13 +9,7 @@
 
 		// Создание макета балуна
 		var MyBalloonLayout = ymaps.templateLayoutFactory.createClass(
-			'<div class="popover top">' +
-			'<a class="close" href="#">&times;</a>' +
-			'<div class="arrow"></div>' +
-			'<div class="popover-inner">' +
-			'$[[options.contentLayout observeSize minWidth=380 maxWidth=380 maxHeight=530]]' +
-			'</div>' +
-			'</div>', {
+			window.balloonLayout, {
 			/**
 			 * Строит экземпляр макета на основе шаблона и добавляет его в родительский HTML-элемент.
 			 * @see https://api.yandex.ru/maps/doc/jsapi/2.1/ref/reference/layout.templateBased.Base.xml#build
@@ -65,7 +59,7 @@
 			},
 
 			/**
-			 * Сдвигаем балун, чтобы "хвостик" указывал на точку привязки.
+			 * Сдвигаем балун
 			 * @see https://api.yandex.ru/maps/doc/jsapi/2.1/ref/reference/IBalloonLayout.xml#event-userclose
 			 * @function
 			 * @name applyElementOffset
@@ -73,7 +67,7 @@
 			applyElementOffset: function () {
 				this._$element.css({
 					left: -(this._$element[0].offsetWidth / 2),
-					top: -(this._$element[0].offsetHeight + this._$element.find('.arrow')[0].offsetHeight)
+					top: -(this._$element[0].offsetHeight)
 				});
 			},
 
@@ -106,7 +100,7 @@
 				return new ymaps.shape.Rectangle(new ymaps.geometry.pixel.Rectangle([
 					[position.left, position.top], [
 						position.left + this._$element[0].offsetWidth,
-						position.top + this._$element[0].offsetHeight + this._$element.find('.arrow')[0].offsetHeight
+						position.top + this._$element[0].offsetHeight
 					]
 				]));
 			},
@@ -120,23 +114,15 @@
 			 * @returns {Boolean} Флаг наличия.
 			 */
 			_isElement: function (element) {
-				return element && element[0] && element.find('.arrow')[0];
+				return element && element[0];
 			}
 		});
 
 		// Создание вложенного макета содержимого балуна.
-        var MyBalloonContentLayout = ymaps.templateLayoutFactory.createClass(
-            '<h3 class="popover-title">$[properties.balloonHeader]</h3>' +
-            '<div class="popover-content">$[properties.balloonContent]</div>'
-        );
+        var MyBalloonContentLayout = ymaps.templateLayoutFactory.createClass(window.balloonContentLayout);
 
 		// Создаем собственный макет с информацией о выбранном геообъекте.
-		var customItemContentLayout = ymaps.templateLayoutFactory.createClass(
-			// Флаг "raw" означает, что данные вставляют "как есть" без экранирования html.
-			'<h2 class=ballon_header>{{ properties.balloonContentHeader|raw }}</h2>' +
-			'<div class=ballon_body>{{ properties.balloonContentBody|raw }}</div>' +
-			'<div class=ballon_footer>{{ properties.balloonContentFooter|raw }}</div>'
-		);
+		var customItemContentLayout = ymaps.templateLayoutFactory.createClass(window.clusterBalloonContentLayout);
 
 		var clusterer = new ymaps.Clusterer({
 			clusterDisableClickZoom: true,
@@ -162,32 +148,35 @@
 			// clusterBalloonPagerVisible: false
 		});
 
-		// Заполняем кластер геообъектами со случайными позициями.
+		// Заполняем кластер геообъектами.
 		var placemarks = [];
-		for (var i = 0, l = 100; i < l; i++) {
-			var placemark = new ymaps.Placemark(getRandomPosition(), {
-				// Устаналиваем данные, которые будут отображаться в балуне.
-				// balloonContentHeader: 'Метка №' + (i + 1),
-				// balloonContentBody: getContentBody(i),
-				// balloonContentFooter: 'Мацуо Басё'
-				// ,
-				balloonHeader: 'Заголовок балуна',
-            	balloonContent: 'Контент балуна'
-			}, {
-	            balloonShadow: false,
-	            balloonLayout: MyBalloonLayout,
-	            balloonContentLayout: MyBalloonContentLayout,
-	            balloonPanelMaxMapArea: 0
-	            // Не скрываем иконку при открытом балуне.
-	            // hideIconOnBalloonOpen: false,
-	            // И дополнительно смещаем балун, для открытия над иконкой.
-	            // balloonOffset: [3, -40]
-	        });
-			placemarks.push(placemark);
-		}
+		var xhr = new XMLHttpRequest();
+		xhr.open('POST', 'http://localhost:3000/');
+		xhr.onloadend = function(e) {
+			var response = JSON.parse(e.target.response);
+			console.log(response);
+			for (key in response) {
+				var place = response[key][0];
+				var coords = [place.coords.x, place.coords.y]
+				var placemark = createPlacemark(coords);
 
-		clusterer.add(placemarks);
-		map.geoObjects.add(clusterer);
+				// for (var i = 0; i < response[key].length; i++) {
+				// 	var newdate = new Date(response[key][i].date);
+				// 	response[key][i].date = newdate.getFullYear() + '-' + newdate.getMonth() + '-' + newdate.getDate();
+				// }
+				console.log(response[key]);
+				placemark.properties.set({
+                    balloonHeader: key,
+                    balloonPlaceInfo: response[key]
+                });
+				placemarks.push(placemark);
+			}
+			if (placemarks.length > 0) {
+				clusterer.add(placemarks);
+				map.geoObjects.add(clusterer);
+			}
+		};
+		xhr.send(JSON.stringify({op: "all"}));
 
 
 		function getRandomPosition () {
@@ -209,6 +198,46 @@
 			return '<br>' + placemarkBodies[num % placemarkBodies.length];
 		}
 		//clusterer.balloon.open(clusterer.getClusters()[0]);
+
+		// Слушаем клик на карте
+	    map.events.add('click', function (e) {
+	        var coords = e.get('coords');
+	        myPlacemark = createPlacemark(coords);
+	        map.geoObjects.add(myPlacemark);
+
+	        clusterer.add(myPlacemark);
+	        setAddress(coords, myPlacemark);
+	        myPlacemark.balloon.open();
+	    });
+
+	    // Создание метки
+	    function createPlacemark(coords) {
+	        return new ymaps.Placemark(coords, {
+				balloonHeader: '',
+            	balloonPlaceInfo: ''
+			}, {
+	            balloonShadow: false,
+	            balloonLayout: MyBalloonLayout,
+	            balloonContentLayout: MyBalloonContentLayout,
+	            balloonPanelMaxMapArea: 0
+	            // Не скрываем иконку при открытом балуне.
+	            // hideIconOnBalloonOpen: false,
+	            // И дополнительно смещаем балун, для открытия над иконкой.
+	            // balloonOffset: [3, -40]
+	        });
+	    }
+
+	    // Определяем адрес по координатам (обратное геокодирование)
+	    function setAddress(coords, myPlacemark) {
+	        myPlacemark.properties.set('balloonHeader', 'поиск...');
+	        ymaps.geocode(coords).then(function (res) {
+	            var firstGeoObject = res.geoObjects.get(0);
+
+	            myPlacemark.properties.set({
+                    balloonHeader: firstGeoObject.properties.get('text')
+                });
+	        });
+	    }
 	});
 
 })();
