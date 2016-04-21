@@ -13,19 +13,26 @@ body {
     height: 100%;
 }
 
-.ballon_header {
+.ballon-header {
     margin-top: 0;
     margin-bottom: 10px;
 
-    font-size: 16px;
-
-    color: #708090;
+    font-family: "Fira Sans", sans-serif;
+    font-size: 15px;
+    line-height: 1.2;
 }
 
-.ballon_body {
-    font-size: 14px;
+.ballon-body {
+    padding-top: 5px;
+    margin-top: 5px;
 
-    text-align: center;
+    font-family: "Fira Sans", sans-serif;
+    font-size: 14px;
+    line-height: 1.2;
+
+    text-align: left;
+
+    border-top: 1px dotted #ccc;
 }
 
 .popover {
@@ -36,7 +43,6 @@ body {
 
     display: block;
     width: 350px;
-    height: 470px;
 
     font-family: "Fira Sans", sans-serif;
     font-size: 14px;
@@ -103,7 +109,7 @@ body {
 }
 
 .reviews {
-    height: 128px;
+    max-height: 128px;
     overflow-y: auto;
 }
 
@@ -158,6 +164,7 @@ body {
     float: right;
     padding: 8px 10px 9px;
     margin-top: -3px;
+    margin-bottom: 10px;
 
     font-size: 12px;
     font-weight: 300;
@@ -174,31 +181,62 @@ body {
     background: #f97853;
 }
 
-.author,
-.place,
-.date {
+.popover .author,
+.popover .place,
+.popover .date {
     display: inline;
     margin-right: 10px;
 }
 
-.author {
+.popover .author {
     font-weight: 500;
 }
 
-.place,
-.date {
+.popover .place,
+.popover .date {
     font-weight: 400;
 
     color: #7b7b7b;
 }
 
-.review-text {
+.popover .review-text {
     display: block;
     margin-top: 5px;
 
     font-weight: 400;
 }
 
-.review {
+.popover .review {
     margin-bottom: 20px;
+}
+
+.popover .date {
+    color: #ccc;
+}
+
+.cluster-address {
+    font-family: "Fira Sans", sans-serif;
+    font-size: 11px;
+    line-height: 10px;
+
+    text-decoration: underline;
+
+    color: #666;
+}
+
+.cluster-address:hover {
+    text-decoration: none;
+}
+
+.ballon-body .review > div span {
+    margin-right: 2px;
+
+    color: #999;
+}
+
+.ballon-body .review {
+    padding-bottom: 7px;
+    margin-bottom: 4px;
+
+    border-bottom: 1px dotted #ccc;
 }
