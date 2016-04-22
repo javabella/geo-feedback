@@ -1,3 +1,4 @@
+'use strict';
 ymaps.ready(function () {
 	// Создание макета балуна
 	window.MyBalloonLayout = ymaps.templateLayoutFactory.createClass(
@@ -88,7 +89,7 @@ ymaps.ready(function () {
 			var form = e.target;
 			var xhr = new XMLHttpRequest();
 			var datas = map.balloon.getData();
-			xhr.open('POST', 'http://smelukov.com:3000/');
+			xhr.open('POST', 'http://localhost:3000/');
 
 			xhr.onloadend = function(e) {
 				var response = JSON.parse(e.target.response);
@@ -198,7 +199,7 @@ ymaps.ready(function () {
 
 			map.balloon.close();
 
-			openMapBalloon(null, coords);
+			window.openMapBalloon(null, coords);
 		},
 		clear: function () {
 			this._$element.off('click');

@@ -1,3 +1,4 @@
+'use strict';
 // Флаг "raw" означает, что данные вставляют "как есть" без экранирования html.
 window.clusterBalloonContentLayout =
 		'<a href="#" data-lat="{{ properties.placemarkLat }}" data-lng="{{ properties.placemarkLng }}" class="cluster-address">Добавить отзыв для адреса:<br>{{ properties.placemarkAddress|raw }}</a>' +
