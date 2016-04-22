@@ -87,11 +87,11 @@ ymaps.ready(function () {
 			e.preventDefault();
 			var form = e.target;
 			var xhr = new XMLHttpRequest();
+			var datas = map.balloon.getData();
 			xhr.open('POST', 'http://localhost:3000/');
 
 			xhr.onloadend = function(e) {
 				var response = JSON.parse(e.target.response);
-				console.log(response);
 
 				//twig не хочет воспринимать выражения и преобразования дат, так что меняем вручную
 				for (var i = 0; i < response.length; i++) {
@@ -100,19 +100,33 @@ ymaps.ready(function () {
 				}
 
 				//также twig не хочет делать сортировку в обратном порядке
-				response = Object.keys(response).map(function(k) { return response[k] });
 				response.reverse();
 
-				currentClickedPlacemark.properties.set({
+				map.balloon.setData({
+					balloonHeader: datas.balloonHeader,
+					balloonLat: datas.balloonLat,
+					balloonLng: datas.balloonLng,
 	                balloonPlaceInfo: response
 	            });
+
+	            if (response.length == 1) {
+	            	var pm = createPlacemark(response);
+	            	clusterer.add(pm);
+	            } else {
+	            	gPlacemarks[datas.balloonHeader].properties.set({
+	            		placemarkAddress: datas.balloonHeader,
+						placemarkLat: datas.balloonLat,
+						placemarkLng: datas.balloonLng,
+						placemarkPlaceInfo: response
+	            	});
+	            }
 			};
 			var request = {
 				'op': 'add',
 				'review': {
 					'coords': {
-						x: parseFloat(form.querySelector('input[name="lat"]').value),
-						y: parseFloat(form.querySelector('input[name="lng"]').value)
+						x: form.querySelector('input[name="lat"]').value,
+						y: form.querySelector('input[name="lng"]').value
 					},
 					'address': form.querySelector('input[name="address"]').value,
 					'name': form.querySelector('input[name="name"]').value,
@@ -161,30 +175,36 @@ ymaps.ready(function () {
 
 	// Создаем собственный макет с информацией о выбранном геообъекте.
 	window.customClusterLayout = ymaps.templateLayoutFactory.createClass(window.clusterBalloonContentLayout, {
+		/**
+		 * Строит экземпляр макета на основе шаблона и добавляет его в родительский HTML-элемент.
+		 * @see https://api.yandex.ru/maps/doc/jsapi/2.1/ref/reference/layout.templateBased.Base.xml#build
+		 * @function
+		 * @name build
+		 */
 		build: function () {
 			this.constructor.superclass.build.call(this);
 
 			this._$element = $('.cluster-address', this.getParentElement());
 
-			this._$element
-				.on('click', function(e) {
-					e.preventDefault();
-					var geoObjects = clusterer.getGeoObjects();
-					var index = this.getAttribute('data-index');
-					console.log(index);
-					console.log(geoObjects);
-					clusterer.balloon.close();
-					setTimeout(function() {
-						geoObjects[index].balloon.open();
-					}, 1000);
+			this._$element.on('click', $.proxy(this.onLinkClick, this));
+		},
+		/**
+		 * Слушаем клик из кластера на добавление отзыва по адресу
+		 */
+		onLinkClick: function (e) {
+			e.preventDefault();
 
-					//console.log(clusterer.getBounds());
-					// for (var i = 0; i < geoObjects.length; i++) {
-					// 	console.log(clusterer.getObjectState(geoObjects[i]));
-					// }
-					//clusterer.state.set('activeObject', geoObjects[1]);
-				});
+			var coords = [e.target.getAttribute('data-lat'), e.target.getAttribute('data-lng')];
+
+			map.balloon.close();
+
+			openMapBalloon(null, coords);
+		},
+		clear: function () {
+			this._$element.off('click');
+			this.constructor.superclass.clear.call(this);
 		}
 	});
+
 });
 
