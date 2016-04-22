@@ -34,7 +34,7 @@ ymaps.ready(function () {
 	// Заполняем кластер геообъектами.
 	var placemarks = [];
 	var xhr = new XMLHttpRequest();
-	xhr.open('POST', 'http://localhost:3000/');
+	xhr.open('POST', 'http://smelukov.com:3000/');
 	xhr.onloadend = function(e) {
 		var response = JSON.parse(e.target.response);
 		for (key in response) {
@@ -128,7 +128,7 @@ ymaps.ready(function () {
 
 	function getReviews() {
 		var datas = map.balloon.getData();
-		xhr.open('POST', 'http://localhost:3000/');
+		xhr.open('POST', 'http://smelukov.com:3000/');
 		xhr.onloadend = function(e) {
 			var response = JSON.parse(e.target.response);
 
